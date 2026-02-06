@@ -1,0 +1,1678 @@
+{
+  "name": "Call Handling & Scheduling",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "af078c94-df06-4427-9704-5b612fe8a958",
+        "responseMode": "=responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        64
+      ],
+      "id": "c62ec6f0-a64a-492b-beff-598da9e3eee3",
+      "name": "Webhook",
+      "webhookId": "af078c94-df06-4427-9704-5b612fe8a958"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2276fb48-7a45-4fa1-babf-afa3ca426129",
+              "name": "=agent_id",
+              "value": "={{ $json.body.data.agent_id }}",
+              "type": "string"
+            },
+            {
+              "id": "e9ab160a-f8d1-4d2d-951d-4132a1cd6cce",
+              "name": "=timestamp",
+              "value": "={{ DateTime.fromSeconds(Number($json.body.event_timestamp)).setZone('Asia/Singapore').toFormat(\"d/L/yyyy h.mma\").toLowerCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "93a3c668-e796-4412-9d17-b362b9a8e985",
+              "name": "=called_number",
+              "value": "={{ $json.body.data.metadata.phone_call.external_number }}",
+              "type": "string"
+            },
+            {
+              "id": "f16e9819-47ac-470e-8586-f68fbd9fffa0",
+              "name": "=calling_number",
+              "value": "={{ $json.body.data.metadata.phone_call.agent_number }}",
+              "type": "string"
+            },
+            {
+              "id": "b21da89c-a687-495c-a663-0c3d7107d36c",
+              "name": "=call_status",
+              "value": "={{ $json.body.data.analysis.data_collection_results.Lead_Status.value }}",
+              "type": "string"
+            },
+            {
+              "id": "84e1c25f-a476-443d-959c-6e64dc9a31f3",
+              "name": "=callback_time_text",
+              "value": "={{ $json.body.data.analysis.data_collection_results.Final_callback_time.value }}",
+              "type": "string"
+            },
+            {
+              "id": "5a5bdfb9-3f94-4e80-a016-9e58333a622e",
+              "name": "=transcript_summary",
+              "value": "={{ $json.body.data.analysis.transcript_summary }}",
+              "type": "string"
+            },
+            {
+              "id": "909ec4ac-fbb8-4322-91d1-448b0380a9a5",
+              "name": "=transcript",
+              "value": "={{   ($json.body.data.transcript ?? [])     .filter(t => ['agent','user'].includes(t.role))     .map(t => {       const speaker = t.role === 'agent' ? 'Agent' : 'User';       const text = (t.original_message ?? t.message ?? '')         .replace(/\\s*\\n\\s*/g, ' ')         .replace(/\\s+/g, ' ')         .trim();       return text ? `${speaker}: ${text}` : null;     })     .filter(Boolean)     .join('\\n\\n') }}",
+              "type": "string"
+            },
+            {
+              "id": "1826acfd-d3ac-4ec2-874e-2ad938578a5a",
+              "name": "=call_duration",
+              "value": "={{ $json.body.data.conversation_initiation_client_data.dynamic_variables.system__call_duration_secs }}",
+              "type": "string"
+            },
+            {
+              "id": "10681742-7b58-4c38-85b3-4db220883fa7",
+              "name": "=conversation_id",
+              "value": "={{ $json.body.data.conversation_initiation_client_data.dynamic_variables.system__conversation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "54ab11c2-be5f-4c5e-84e0-3cfc6b2d57e4",
+              "name": "config_base",
+              "value": "appQ50d0FmPuA4cx3",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        64
+      ],
+      "id": "9205887d-c024-4415-8fa4-a24ba64fb73e",
+      "name": "Extract_Call_Data"
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://api.airtable.com/v0/' + $node['Extract_Call_Data'].json.config_base + '/Testing' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "airtableTokenApi",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "={\n  \"maxRecords\": 1,\n  \"pageSize\": 1,\n  \"fields[]\": [\"base_id\", \"table_name\"],\n  \"filterByFormula\": \"AND({agent_id}='{{ $('Extract_Call_Data').item.json.agent_id }}',{enabled}=TRUE())\",\n  \"sort[0][field]\": \"agent_id\",\n  \"sort[0][direction]\": \"asc\",\n  \"view\": \"Grid view\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1680,
+        -160
+      ],
+      "id": "19981b27-05a5-48d4-9821-b24a9dc107ad",
+      "name": "Map Agent ID to Base ID",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "IUXT6k6xhXYCn2iu",
+          "name": "Airtable Personal Access Token account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "Success: Webhook processed successfully",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2784,
+        -256
+      ],
+      "id": "92c00817-4022-4c8b-8738-c33fd7aeab3f",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "={{ $json.baseId }}",
+          "mode": "id"
+        },
+        "table": {
+          "__rl": true,
+          "value": "={{ $json.table }}",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Duration": "={{ $json.call_duration }}",
+            "Timestamp": "={{ $json.timestamp }}",
+            "Called_Number": "={{ $json.called_number }}",
+            "Calling_Number": "={{ $json.calling_number }}",
+            "Status": "={{ $json.call_status }}",
+            "Transcript Summary": "={{ $json.transcript_summary }}",
+            "Full Transcript": "={{ $json.transcript }}",
+            "Conversation ID": "={{ $json.conversation_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Created time",
+              "displayName": "Created time",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "Called_Number",
+              "displayName": "Called_Number",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Appointment Booked",
+                  "value": "Appointment Booked"
+                },
+                {
+                  "name": "Whatsapp",
+                  "value": "Whatsapp"
+                },
+                {
+                  "name": "Qualified",
+                  "value": "Qualified"
+                },
+                {
+                  "name": "Call Back",
+                  "value": "Call Back"
+                },
+                {
+                  "name": "Not Interested",
+                  "value": "Not Interested"
+                },
+                {
+                  "name": "Voicemail",
+                  "value": "Voicemail"
+                },
+                {
+                  "name": "Not Qualified",
+                  "value": "Not Qualified"
+                },
+                {
+                  "name": "Unknown",
+                  "value": "Unknown"
+                },
+                {
+                  "name": "To Remove",
+                  "value": "To Remove"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Calling_Number",
+              "displayName": "Calling_Number",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Transcript Summary",
+              "displayName": "Transcript Summary",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Full Transcript",
+              "displayName": "Full Transcript",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Duration",
+              "displayName": "Duration",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Conversation ID",
+              "displayName": "Conversation ID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "typecast": true
+        }
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        2560,
+        -256
+      ],
+      "id": "ed2c07e8-1df0-446e-9478-8603ff309308",
+      "name": "Save to Airtable",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "IUXT6k6xhXYCn2iu",
+          "name": "Airtable Personal Access Token account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Extract_Call_Data').item.json.call_status }}",
+                    "rightValue": "Call Back",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "1e10f3bb-20b3-4153-a29a-7d63423c48d5"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "9750831c-aabf-4d50-9d9b-677e386c141e",
+                    "leftValue": "={{ $('Extract_Call_Data').item.json.call_status }}",
+                    "rightValue": "Whatsapp",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "90360bac-9ede-45ff-b400-31c2076dc71f",
+                    "leftValue": "",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        448,
+        -240
+      ],
+      "id": "b260f2bf-9c44-4983-a667-79f4ac88009a",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4",
+          "mode": "id"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Write a short whatsapp message, in Gary Halbert style for the customer based on the following phone call summary. \n\nCall Summary:\n{{ $('Extract_Call_Data').item.json.transcript_summary }}\n\ndo not add \\n or anything that is not natural language\n\nWhatsApp Message:"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        688,
+        -368
+      ],
+      "id": "d88c7021-f32f-49e4-a9c9-5e620328913b",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "QggenxUH8shoGkmB",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1456,
+        -272
+      ],
+      "id": "dda63c95-804f-4e76-9d30-4328b51f8340",
+      "name": "Merge before logging"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "text-embedding-3-small"
+            },
+            {
+              "name": "input",
+              "value": "=Call Status: {{ $('Extract_Call_Data').item.json.call_status }}. Summary: {{ $('Extract_Call_Data').item.json.transcript_summary }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        448,
+        208
+      ],
+      "id": "d0908df2-028b-4097-aed8-6c10ddf4255d",
+      "name": "Embedding Request to OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "QggenxUH8shoGkmB",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "Trigger by elevenlabs when call is cut ",
+        "height": 80,
+        "width": 192
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        208
+      ],
+      "id": "d4238097-fa49-417a-aec4-7a35ba93dffc",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## This is decides the appropriate next step according to the data extracted "
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        304,
+        -432
+      ],
+      "id": "14c0d1cc-027f-4df7-bd23-d10ed7f921fd",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        736,
+        144
+      ],
+      "id": "904487d0-74a6-45e7-be45-0f50664f9c16",
+      "name": "Combine the call data + embeddings "
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://agent-memory-zwfrjjl.svc.aped-4627-b74a.pinecone.io/vectors/upsert",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={\n  \"Api-Key\": \"YOUR_PINECONE_API_KEY\"\n}\n",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={\n  \"vectors\": [\n    {\n      \"id\": \"{{$json.conversation_id}}\",\n      \"values\": [{{$json[\"data\"][0].embedding}}],\n      \"metadata\": {\n        \"agent_id\": \"{{$json.agent_id}}\",\n        \"timestamp\": \"{{$json.timestamp}}\",\n        \"called_number\": \"{{$json.called_number}}\",\n        \"calling_number\": \"{{$json.calling_number}}\",\n        \"call_status\": \"{{$json.call_status}}\",\n        \"conversation_id\": \"{{$json.conversation_id}}\",\n        \"config_base\": \"{{$json.config_base}}\"\n      }\n    }\n  ]\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1024,
+        144
+      ],
+      "id": "e9f2fe46-fc1a-4597-95a9-562b2df400d5",
+      "name": "Store the Vector and meta data"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b6f246e7-6af7-43fd-8e3e-6e85312bf5c3",
+              "name": "=scheduled_time",
+              "value": "={{ $json.callback_time_text ? $json.callback_time_text : $now.setZone('Asia/Singapore').plus({ hours: 2 }).toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "95632c0d-f185-45fd-be17-57cecf6abaa9",
+              "name": "=status",
+              "value": "Scheduled",
+              "type": "string"
+            },
+            {
+              "id": "145cf5d2-3c73-4b95-8b06-294ea4bf4129",
+              "name": "=phone_number",
+              "value": "={{ $('Extract_Call_Data').item.json.called_number }}",
+              "type": "string"
+            },
+            {
+              "id": "da080841-74bd-4d0d-a090-f9cd1dea4d1d",
+              "name": "=agent_id",
+              "value": "={{ $('Extract_Call_Data').item.json.agent_id }}",
+              "type": "string"
+            },
+            {
+              "id": "230f27cc-f320-405e-9aba-77c7289db3d8",
+              "name": "=conversation_id",
+              "value": "={{ $('Extract_Call_Data').item.json.conversation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "f561cd20-26f3-40f3-90ef-d59907918f75",
+              "name": "calling_number",
+              "value": "={{ $('Extract_Call_Data').item.json.calling_number }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        736,
+        -80
+      ],
+      "id": "56b162bb-884f-4cc4-a0fd-339a2b9cbede",
+      "name": "Convert data for storing in callback table"
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "base": {
+          "__rl": true,
+          "value": "appQ50d0FmPuA4cx3",
+          "mode": "list",
+          "cachedResultName": "testing",
+          "cachedResultUrl": "https://airtable.com/appQ50d0FmPuA4cx3"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblbTfBRPT8gd960H",
+          "mode": "list",
+          "cachedResultName": "Callbacks",
+          "cachedResultUrl": "https://airtable.com/appQ50d0FmPuA4cx3/tblbTfBRPT8gd960H"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ScheduledTimeUTC": "={{ $json.scheduled_time }}",
+            "PhoneNumberToCall": "={{ $json.phone_number }}",
+            "Status": "={{ $json.status }}",
+            "AgentID": "={{ $json.agent_id }}",
+            "OriginalConversationID": "={{ $json.conversation_id }}",
+            "FromNumber ": "={{$json.calling_number}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "PhoneNumberToCall",
+              "displayName": "PhoneNumberToCall",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "ScheduledTimeUTC",
+              "displayName": "ScheduledTimeUTC",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Scheduled",
+                  "value": "Scheduled"
+                },
+                {
+                  "name": "Processing",
+                  "value": "Processing"
+                },
+                {
+                  "name": "Completed",
+                  "value": "Completed"
+                },
+                {
+                  "name": "Error",
+                  "value": "Error"
+                },
+                {
+                  "name": "+919050138050",
+                  "value": "+919050138050"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "AgentID",
+              "displayName": "AgentID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "OriginalConversationID",
+              "displayName": "OriginalConversationID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "FromNumber ",
+              "displayName": "FromNumber ",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        1024,
+        -80
+      ],
+      "id": "d2d53c01-9637-4b76-a5dc-50170b9040a8",
+      "name": "Store in callback table ",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "IUXT6k6xhXYCn2iu",
+          "name": "Airtable Personal Access Token account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://services.leadconnectorhq.com/hooks/E67g4qGfoQBPGC1LoB6c/webhook-trigger/SUpIWiDqHQMauK1FbNOl",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"phone\": \"{{ $('Extract_Call_Data').item.json.called_number }}\",\n  \"message\": \"{{ $json.message.content }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1024,
+        -368
+      ],
+      "id": "6ed39708-5eb4-4ecf-b6ad-2a85fa1eb5fd",
+      "name": "Send request to GHL for messaging "
+    },
+    {
+      "parameters": {
+        "content": "## Merge All data for final storing for three different options "
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1376,
+        -416
+      ],
+      "id": "a564c93a-3d52-481d-b482-170a55dec275",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rec = $json.records?.[0]?.fields;\nif (!rec) throw new Error('No routing row found or agent not enabled');\n\nreturn [{\n  baseId: rec.base_id,     // dynamic per agent\n  table:  rec.table_name   // dynamic per agent\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1904,
+        -160
+      ],
+      "id": "8d7f80ff-fed6-454e-8908-0a2b61cf4e59",
+      "name": "Filter out table and base name"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2128,
+        -256
+      ],
+      "id": "6b6af963-06c4-4678-ab8c-c2b2b8929f2b",
+      "name": " Merge Before saving to airtable "
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9a1c9b92-7588-47a3-9119-6807889047a1",
+              "name": "agent_id",
+              "value": "={{ $json.agent_id }}",
+              "type": "string"
+            },
+            {
+              "id": "9c2ffbe6-b739-4e35-a5dd-c1a5681f8dee",
+              "name": "timestamp",
+              "value": "={{ $json.timestamp }}",
+              "type": "string"
+            },
+            {
+              "id": "d95ad0e9-389c-4458-afe5-9da7b2178928",
+              "name": "called_number",
+              "value": "={{ $json.called_number }}",
+              "type": "string"
+            },
+            {
+              "id": "24de6f9f-449d-44c2-b1fe-98af5d8a58b8",
+              "name": "calling_number",
+              "value": "={{ $json.calling_number }}",
+              "type": "string"
+            },
+            {
+              "id": "8b78336e-a4a0-4951-b0e0-eb12e48bdccc",
+              "name": "call_status",
+              "value": "={{ $json.call_status }}",
+              "type": "string"
+            },
+            {
+              "id": "f2b9348f-8e14-4c7b-8655-3dc577733505",
+              "name": "transcript_summary",
+              "value": "={{ $json.transcript_summary }}",
+              "type": "string"
+            },
+            {
+              "id": "28913355-dcc9-42c7-8b10-ff9cbef61e14",
+              "name": "transcript",
+              "value": "={{ $json.transcript }}",
+              "type": "string"
+            },
+            {
+              "id": "7515320c-3851-4c13-9a08-10db325b63b0",
+              "name": "call_duration",
+              "value": "={{ $json.call_duration }}",
+              "type": "string"
+            },
+            {
+              "id": "ef9cb653-ba32-4ec9-b288-5538b431892c",
+              "name": "conversation_id",
+              "value": "={{ $json.conversation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "93fb0bb7-b20c-4a52-99f0-636e6c3f0704",
+              "name": "baseId",
+              "value": "={{ $json.baseId }}",
+              "type": "string"
+            },
+            {
+              "id": "19094649-ba62-4d9e-93f3-c83a17a2669b",
+              "name": "table",
+              "value": "={{ $json.table }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2336,
+        -256
+      ],
+      "id": "795fdad9-aef0-4960-9b12-6a45e5ae55c8",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "883aa851-8de4-454e-9101-6ee314f81d4b",
+              "name": "agent_id",
+              "value": "={{ $json.fields.AgentID }}",
+              "type": "string"
+            },
+            {
+              "id": "115d9129-518e-4812-a37c-20c96c655d67",
+              "name": "timestamp",
+              "value": "={{ $('Switch').item.json.timestamp }}",
+              "type": "string"
+            },
+            {
+              "id": "5b250d2d-997c-4a77-ae03-2403decf5a4c",
+              "name": "called_number",
+              "value": "={{ $json.fields.PhoneNumberToCall }}",
+              "type": "string"
+            },
+            {
+              "id": "3b831dbd-8512-47ac-8b1e-22ef8229a8dd",
+              "name": "calling_number",
+              "value": "={{ $json.fields[\"FromNumber \"] }}",
+              "type": "string"
+            },
+            {
+              "id": "15d857a4-9f64-4698-b490-342c5c8fd5e9",
+              "name": "call_status",
+              "value": "=Call Back",
+              "type": "string"
+            },
+            {
+              "id": "828b4311-61d2-42ad-8cc7-2fc90f5c9636",
+              "name": "callback_time_text",
+              "value": "={{ $json.fields.ScheduledTimeUTC }}",
+              "type": "string"
+            },
+            {
+              "id": "a53eaedc-e478-4c1c-a33e-d0db1973bfa8",
+              "name": "transcript_summary",
+              "value": "={{ $('Extract_Call_Data').item.json.transcript_summary }}",
+              "type": "string"
+            },
+            {
+              "id": "86d5afe9-6e2b-42be-a0de-3a82b0ba5f59",
+              "name": "transcript",
+              "value": "={{ $('Extract_Call_Data').item.json.transcript }}",
+              "type": "string"
+            },
+            {
+              "id": "ff85bcbe-c8ea-4d63-b622-4d9d03a6dd4f",
+              "name": "call_duration",
+              "value": "={{ $('Extract_Call_Data').item.json.call_duration }}",
+              "type": "string"
+            },
+            {
+              "id": "d41ccd41-00bd-4644-b096-8993eb51f814",
+              "name": "conversation_id",
+              "value": "={{ $('Extract_Call_Data').item.json.conversation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "a881493a-1eef-4598-9fef-ca4b33b71d6d",
+              "name": "config_base",
+              "value": "={{ $('Extract_Call_Data').item.json.config_base }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1232,
+        -80
+      ],
+      "id": "b093ed3b-4a63-4390-abca-b24b847a3278",
+      "name": "Edit Fields1"
+    }
+  ],
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "nicksonguay-work.app.n8n.cloud",
+            "user-agent": "ElevenLabs/1.0",
+            "content-length": "10775",
+            "accept": "*/*",
+            "accept-encoding": "gzip, br",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "34.59.11.47",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "US",
+            "cf-ray": "99e645f9f3d1eac3-ORD",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "elevenlabs-signature": "t=1763120838,v0=e97e6832abfa8f1b2c62e464678f89fe823d552eaeddd6443384a246d7e70e44",
+            "x-forwarded-for": "34.59.11.47, 172.70.127.235",
+            "x-forwarded-host": "nicksonguay-work.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-42-bd54959cf-2qqc4",
+            "x-is-trusted": "yes",
+            "x-real-ip": "34.59.11.47"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "type": "post_call_transcription",
+            "event_timestamp": 1763120838,
+            "data": {
+              "agent_id": "agent_5501k8627rhqf878k8mg893jkx0h",
+              "conversation_id": "conv_4101ka130egafvrath72rn93efnm",
+              "status": "done",
+              "user_id": null,
+              "branch_id": null,
+              "transcript": [
+                {
+                  "role": "agent",
+                  "agent_metadata": {
+                    "agent_id": "agent_5501k8627rhqf878k8mg893jkx0h",
+                    "branch_id": null,
+                    "workflow_node_id": null
+                  },
+                  "message": "If I told you this was a call about real estate, would a piece of your soul die?",
+                  "multivoice_message": null,
+                  "tool_calls": [],
+                  "tool_results": [],
+                  "feedback": null,
+                  "llm_override": null,
+                  "time_in_call_secs": 0,
+                  "conversation_turn_metrics": {
+                    "metrics": {
+                      "convai_tts_service_ttfb": {
+                        "elapsed_time": 0.18059167799947318
+                      }
+                    }
+                  },
+                  "rag_retrieval_info": null,
+                  "llm_usage": null,
+                  "interrupted": false,
+                  "original_message": null,
+                  "source_medium": null
+                },
+                {
+                  "role": "user",
+                  "agent_metadata": null,
+                  "message": "Okay, so can you call me back later in about three minutes time because I'm busy now.",
+                  "multivoice_message": null,
+                  "tool_calls": [],
+                  "tool_results": [],
+                  "feedback": null,
+                  "llm_override": null,
+                  "time_in_call_secs": 8,
+                  "conversation_turn_metrics": {
+                    "metrics": {
+                      "convai_asr_trailing_service_latency": {
+                        "elapsed_time": 0.2344278070013388
+                      }
+                    }
+                  },
+                  "rag_retrieval_info": null,
+                  "llm_usage": null,
+                  "interrupted": false,
+                  "original_message": null,
+                  "source_medium": "audio"
+                },
+                {
+                  "role": "agent",
+                  "agent_metadata": {
+                    "agent_id": "agent_5501k8627rhqf878k8mg893jkx0h",
+                    "branch_id": null,
+                    "workflow_node_id": null
+                  },
+                  "message": "Sure, I understand you’re busy right now. Would a call back in about three minutes work for you, or is there another time that’s more convenient?",
+                  "multivoice_message": null,
+                  "tool_calls": [],
+                  "tool_results": [],
+                  "feedback": null,
+                  "llm_override": null,
+                  "time_in_call_secs": 16,
+                  "conversation_turn_metrics": {
+                    "metrics": {
+                      "convai_llm_service_ttf_sentence": {
+                        "elapsed_time": 0.5653642070028582
+                      },
+                      "convai_llm_service_ttfb": {
+                        "elapsed_time": 0.44661062699742615
+                      },
+                      "convai_llm_service_tt_last_sentence": {
+                        "elapsed_time": 0.6187219569983426
+                      },
+                      "convai_tts_service_ttfb": {
+                        "elapsed_time": 0.18394927000190364
+                      }
+                    }
+                  },
+                  "rag_retrieval_info": null,
+                  "llm_usage": {
+                    "model_usage": {
+                      "gpt-oss-120b": {
+                        "input": {
+                          "tokens": 10783,
+                          "price": 0.0018331100000000002
+                        },
+                        "input_cache_read": {
+                          "tokens": 0,
+                          "price": 0
+                        },
+                        "input_cache_write": {
+                          "tokens": 0,
+                          "price": 0
+                        },
+                        "output_total": {
+                          "tokens": 48,
+                          "price": 0.0002784
+                        }
+                      }
+                    }
+                  },
+                  "interrupted": false,
+                  "original_message": null,
+                  "source_medium": null
+                },
+                {
+                  "role": "user",
+                  "agent_metadata": null,
+                  "message": "Three minutes will work for me. Thank you.",
+                  "multivoice_message": null,
+                  "tool_calls": [],
+                  "tool_results": [],
+                  "feedback": null,
+                  "llm_override": null,
+                  "time_in_call_secs": 25,
+                  "conversation_turn_metrics": {
+                    "metrics": {
+                      "convai_asr_trailing_service_latency": {
+                        "elapsed_time": 0.2591934630036121
+                      }
+                    }
+                  },
+                  "rag_retrieval_info": null,
+                  "llm_usage": null,
+                  "interrupted": false,
+                  "original_message": null,
+                  "source_medium": "audio"
+                },
+                {
+                  "role": "agent",
+                  "agent_metadata": {
+                    "agent_id": "agent_5501k8627rhqf878k8mg893jkx0h",
+                    "branch_id": null,
+                    "workflow_node_id": null
+                  },
+                  "message": "Got it, I’ll give you a call back in about three minutes. If anything changes, just let me know. Talk to you shortly.",
+                  "multivoice_message": null,
+                  "tool_calls": [],
+                  "tool_results": [],
+                  "feedback": null,
+                  "llm_override": null,
+                  "time_in_call_secs": 29,
+                  "conversation_turn_metrics": {
+                    "metrics": {
+                      "convai_llm_service_ttf_sentence": {
+                        "elapsed_time": 0.916492495998682
+                      },
+                      "convai_llm_service_ttfb": {
+                        "elapsed_time": 0.8093357359975926
+                      },
+                      "convai_llm_service_tt_last_sentence": {
+                        "elapsed_time": 0.9834553330001654
+                      },
+                      "convai_tts_service_ttfb": {
+                        "elapsed_time": 0.19265988699771697
+                      }
+                    }
+                  },
+                  "rag_retrieval_info": null,
+                  "llm_usage": {
+                    "model_usage": {
+                      "gpt-oss-120b": {
+                        "input": {
+                          "tokens": 10846,
+                          "price": 0.0018438200000000001
+                        },
+                        "input_cache_read": {
+                          "tokens": 0,
+                          "price": 0
+                        },
+                        "input_cache_write": {
+                          "tokens": 0,
+                          "price": 0
+                        },
+                        "output_total": {
+                          "tokens": 39,
+                          "price": 0.0002262
+                        }
+                      }
+                    }
+                  },
+                  "interrupted": false,
+                  "original_message": null,
+                  "source_medium": null
+                }
+              ],
+              "metadata": {
+                "start_time_unix_secs": 1763120797,
+                "accepted_time_unix_secs": 1763120797,
+                "call_duration_secs": 37,
+                "cost": 739,
+                "deletion_settings": {
+                  "deletion_time_unix_secs": null,
+                  "deleted_logs_at_time_unix_secs": null,
+                  "deleted_audio_at_time_unix_secs": null,
+                  "deleted_transcript_at_time_unix_secs": null,
+                  "delete_transcript_and_pii": false,
+                  "delete_audio": false
+                },
+                "feedback": {
+                  "type": null,
+                  "overall_score": null,
+                  "likes": 0,
+                  "dislikes": 0,
+                  "rating": null,
+                  "comment": null
+                },
+                "authorization_method": "signed_url",
+                "charging": {
+                  "dev_discount": false,
+                  "is_burst": false,
+                  "tier": "enterprise",
+                  "llm_usage": {
+                    "irreversible_generation": {
+                      "model_usage": {
+                        "gpt-oss-120b": {
+                          "input": {
+                            "tokens": 21629,
+                            "price": 0.00367693
+                          },
+                          "input_cache_read": {
+                            "tokens": 0,
+                            "price": 0
+                          },
+                          "input_cache_write": {
+                            "tokens": 0,
+                            "price": 0
+                          },
+                          "output_total": {
+                            "tokens": 87,
+                            "price": 0.0005046
+                          }
+                        }
+                      }
+                    },
+                    "initiated_generation": {
+                      "model_usage": {
+                        "gpt-oss-120b": {
+                          "input": {
+                            "tokens": 32399,
+                            "price": 0.005507830000000001
+                          },
+                          "input_cache_read": {
+                            "tokens": 0,
+                            "price": 0
+                          },
+                          "input_cache_write": {
+                            "tokens": 0,
+                            "price": 0
+                          },
+                          "output_total": {
+                            "tokens": 131,
+                            "price": 0.0007597999999999999
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "llm_price": 0.006267630000000001,
+                  "llm_charge": 69,
+                  "call_charge": 670,
+                  "free_minutes_consumed": 0,
+                  "free_llm_dollars_consumed": 0
+                },
+                "phone_call": {
+                  "direction": "outbound",
+                  "phone_number_id": "phnum_2201k1pypfb0fhqa3d5spwgpmdhc",
+                  "agent_number": "+6568279903",
+                  "external_number": "+6587615818",
+                  "type": "sip_trunking",
+                  "call_sid": "SCL_asc93zus3dCX"
+                },
+                "batch_call": null,
+                "termination_reason": "Client disconnected: 1000",
+                "error": null,
+                "main_language": "en",
+                "rag_usage": null,
+                "text_only": false,
+                "features_usage": {
+                  "language_detection": {
+                    "enabled": true,
+                    "used": false
+                  },
+                  "transfer_to_agent": {
+                    "enabled": false,
+                    "used": false
+                  },
+                  "transfer_to_number": {
+                    "enabled": false,
+                    "used": false
+                  },
+                  "multivoice": {
+                    "enabled": false,
+                    "used": false
+                  },
+                  "dtmf_tones": {
+                    "enabled": false,
+                    "used": false
+                  },
+                  "external_mcp_servers": {
+                    "enabled": false,
+                    "used": false
+                  },
+                  "pii_zrm_workspace": false,
+                  "pii_zrm_agent": false,
+                  "tool_dynamic_variable_updates": {
+                    "enabled": false,
+                    "used": false
+                  },
+                  "is_livekit": true,
+                  "voicemail_detection": {
+                    "enabled": true,
+                    "used": false
+                  },
+                  "workflow": {
+                    "enabled": false,
+                    "tool_node": {
+                      "enabled": false,
+                      "used": false
+                    },
+                    "standalone_agent_node": {
+                      "enabled": false,
+                      "used": false
+                    },
+                    "phone_number_node": {
+                      "enabled": false,
+                      "used": false
+                    },
+                    "end_node": {
+                      "enabled": false,
+                      "used": false
+                    }
+                  },
+                  "agent_testing": {
+                    "enabled": false,
+                    "tests_ran_after_last_modification": false,
+                    "tests_ran_in_last_7_days": false
+                  }
+                },
+                "eleven_assistant": {
+                  "is_eleven_assistant": false
+                },
+                "initiator_id": null,
+                "conversation_initiation_source": "sip_trunk",
+                "conversation_initiation_source_version": null,
+                "timezone": "Asia/Singapore",
+                "initiation_trigger": {
+                  "trigger_type": "default"
+                },
+                "async_metadata": null,
+                "whatsapp": null,
+                "agent_created_from": "ui",
+                "agent_last_updated_from": "ui"
+              },
+              "analysis": {
+                "evaluation_criteria_results": {
+                  "appointment_booked": {
+                    "criteria_id": "appointment_booked",
+                    "result": "failure",
+                    "rationale": "The conversation ends with the agent agreeing to call back in three minutes. There is no evidence that an appointment or meeting was booked successfully."
+                  }
+                },
+                "data_collection_results": {
+                  "Lead_Status": {
+                    "data_collection_id": "Lead_Status",
+                    "value": "Call Back",
+                    "json_schema": {
+                      "type": "string",
+                      "description": "Determine the lead status at the end of the call. \n\nReturn \"Appointment Booked\" when an appointment is booked successfully. \n\nReturn \"Qualified\" when lead provides qualifying information but did not book an appointment. \n\nReturn \"Whatsapp\" when lead asks to text back, send a message, send a Whatsapp or send a SMS. \n\nReturn \"Call Back\" if lead requests to call back at another date or time. \n\nReturn \"Not Interested\" if lead is completely not interested in any conversation or exploration. \n\nReturn \"Not Qualified\" when a lead provides information that disqualifies itself from a transaction like if its of the wrong age, or does not have money. \n\nReturn \"To Remove\" if lead explicitly requests to remove itself from the list, asks to never call again, or says that they are on the DNC list or registry. \n\nReturn \"Unknown\" if there is no suitable categorisation for the lead or if there is not enough information to determine one. ",
+                      "enum": null,
+                      "is_system_provided": false,
+                      "dynamic_variable": "",
+                      "constant_value": ""
+                    },
+                    "rationale": "The lead requested a call back in three minutes. Therefore, the lead status is \"Call Back\"."
+                  },
+                  "Final_State": {
+                    "data_collection_id": "Final_State",
+                    "value": "OPENER",
+                    "json_schema": {
+                      "type": "string",
+                      "description": "The end state of the finite state machine logic that this call was in when the call ended. Choose between OPENER, PITCH, PROBLEM_OWNERSHIP, EXAMPLE, IMPACT, ROOT_CAUSE, SUMMARY, CLOSE, OBJECTION",
+                      "enum": null,
+                      "is_system_provided": false,
+                      "dynamic_variable": "",
+                      "constant_value": ""
+                    },
+                    "rationale": "The conversation ends with the agent agreeing to call the user back in three minutes. This is still in the initial stages of the call, so the appropriate state is OPENER."
+                  },
+                  "Final_callback_time": {
+                    "data_collection_id": "Final_callback_time",
+                    "value": null,
+                    "json_schema": {
+                      "type": "string",
+                      "description": "Determine the final callback time at the end of the call. Only give time not the timezone \n\nReturn the specific time if the lead requests a callback at a specific time.\n\nReturn null if no callback time is mentioned during the call.",
+                      "enum": null,
+                      "is_system_provided": false,
+                      "dynamic_variable": "",
+                      "constant_value": ""
+                    },
+                    "rationale": "The user requests a callback in 'about three minutes'. This is not a specific time, so the value should be null."
+                  }
+                },
+                "call_successful": "failure",
+                "transcript_summary": "The agent initiated a call about real estate. The user requested a callback in three minutes due to being busy. The agent confirmed the callback time.\n",
+                "call_summary_title": "Schedule Callback in 3min"
+              },
+              "conversation_initiation_client_data": {
+                "conversation_config_override": {
+                  "turn": null,
+                  "tts": null,
+                  "conversation": null,
+                  "agent": null
+                },
+                "custom_llm_extra_body": {},
+                "user_id": null,
+                "source_info": {
+                  "source": null,
+                  "version": null
+                },
+                "dynamic_variables": {
+                  "system__agent_id": "agent_5501k8627rhqf878k8mg893jkx0h",
+                  "system__current_agent_id": "agent_5501k8627rhqf878k8mg893jkx0h",
+                  "system__conversation_id": "conv_4101ka130egafvrath72rn93efnm",
+                  "system__caller_id": "+6568279903",
+                  "system__called_number": "+6587615818",
+                  "system__call_duration_secs": 37,
+                  "system__time_utc": "2025-11-14T11:47:14.558268+00:00",
+                  "system__time": "Friday, 19:47 14 November 2025",
+                  "system__timezone": "Asia/Singapore",
+                  "system__call_sid": "SCL_asc93zus3dCX"
+                }
+              }
+            }
+          },
+          "webhookUrl": "https://nicksonguay-work.app.n8n.cloud/webhook/af078c94-df06-4427-9704-5b612fe8a958",
+          "executionMode": "production"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract_Call_Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract_Call_Data": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Embedding Request to OpenAI",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Combine the call data + embeddings ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Agent ID to Base ID": {
+      "main": [
+        [
+          {
+            "node": "Filter out table and base name",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Airtable": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Convert data for storing in callback table",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Merge before logging",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Send request to GHL for messaging ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge before logging": {
+      "main": [
+        [
+          {
+            "node": "Map Agent ID to Base ID",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": " Merge Before saving to airtable ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embedding Request to OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Combine the call data + embeddings ",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Combine the call data + embeddings ": {
+      "main": [
+        [
+          {
+            "node": "Store the Vector and meta data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert data for storing in callback table": {
+      "main": [
+        [
+          {
+            "node": "Store in callback table ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store in callback table ": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send request to GHL for messaging ": {
+      "main": [
+        [
+          {
+            "node": "Merge before logging",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter out table and base name": {
+      "main": [
+        [
+          {
+            "node": " Merge Before saving to airtable ",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    " Merge Before saving to airtable ": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Save to Airtable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge before logging",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c955bc91-2fff-4aa2-ad46-93a11d2a2ec4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "297053136ba1749ae2334d577192da678d4da87a18c0afa189e98db187093a0c"
+  },
+  "id": "oPEm0t4wJixPIS2u",
+  "tags": []
+}

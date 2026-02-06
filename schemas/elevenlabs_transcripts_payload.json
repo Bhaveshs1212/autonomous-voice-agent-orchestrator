@@ -1,0 +1,40 @@
+{
+  "type": "post_call_transcription",
+  "event_timestamp": 1763120838,
+  "data": {
+    "agent_id": "agent_example_id_12345",
+    "conversation_id": "conv_example_id_67890",
+    "status": "done",
+    "transcript": [
+      {
+        "role": "agent",
+        "message": "If I told you this was a call about real estate, would a piece of your soul die?",
+        "time_in_call_secs": 0
+      },
+      {
+        "role": "user",
+        "message": "Can you call me back later in about three minutes?",
+        "time_in_call_secs": 8
+      }
+    ],
+    "analysis": {
+      "data_collection_results": {
+        "Lead_Status": {
+          "value": "Call Back",
+          "rationale": "The lead requested a call back in three minutes."
+        },
+        "Final_callback_time": {
+          "value": null
+        }
+      },
+      "transcript_summary": "The agent initiated a call. The user requested a callback in three minutes."
+    },
+    "conversation_initiation_client_data": {
+      "dynamic_variables": {
+        "system__caller_id": "+15550000000",
+        "system__called_number": "+15551112222",
+        "system__call_duration_secs": 37
+      }
+    }
+  }
+}

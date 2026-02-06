@@ -1,0 +1,17 @@
+{
+  "vectors": [
+    {
+      "id": "conv_example_id_67890",
+      "values": [0.0123, -0.0456, 0.789],
+      "metadata": {
+        "agent_id": "agent_example_id_12345",
+        "timestamp": "14/11/2025 7.47pm",
+        "called_number": "+15551112222",
+        "calling_number": "+15550000000",
+        "call_status": "Call Back",
+        "conversation_id": "conv_example_id_67890",
+        "config_base": "appExampleBaseID"
+      }
+    }
+  ]
+}

@@ -1,0 +1,765 @@
+{
+  "name": "Calling back on request",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        160
+      ],
+      "id": "d5b6f877-c0d8-4434-863a-2564cc5c036c",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        656,
+        144
+      ],
+      "id": "171e5de2-a014-4b3e-b491-7383dce4a1ac",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.elevenlabs.io/v1/convai/sip-trunk/outbound-call",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n\"xi-api-key\":\"sk_dc4b07b89a56a816195d3ed59d5735757b7ca4bee684c53f\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"agent_id\": \"{{$json.fields.AgentID}}\",\n  \"agent_phone_number_id\":\"{{$json.phone_number_id}}\",\n  \"voice_id\": \"WTbQRz7FpEjAhl1OrNkO\",\n  \"from_number\": \"{{ $json.fields['FromNumber ']}}\",\n  \"to_number\": \"{{ $json.fields.PhoneNumberToCall}}\",\n  \"call_data\": {\n    \"memory\": \"{{ $json.long_term_memory }}\"\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2464,
+        32
+      ],
+      "id": "c3105f47-5ebd-416c-9eb6-b12cb0048770",
+      "name": "HTTP Request2"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appQ50d0FmPuA4cx3",
+          "mode": "list",
+          "cachedResultName": "testing",
+          "cachedResultUrl": "https://airtable.com/appQ50d0FmPuA4cx3"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblbTfBRPT8gd960H",
+          "mode": "list",
+          "cachedResultName": "Callbacks",
+          "cachedResultUrl": "https://airtable.com/appQ50d0FmPuA4cx3/tblbTfBRPT8gd960H"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Completed",
+            "id": "={{ $('Search records for Callbacks from the table ').item.json.id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "PhoneNumberToCall",
+              "displayName": "PhoneNumberToCall",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "ScheduledTimeUTC",
+              "displayName": "ScheduledTimeUTC",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Scheduled",
+                  "value": "Scheduled"
+                },
+                {
+                  "name": "Processing",
+                  "value": "Processing"
+                },
+                {
+                  "name": "Completed",
+                  "value": "Completed"
+                },
+                {
+                  "name": "Error",
+                  "value": "Error"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "AgentID",
+              "displayName": "AgentID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "OriginalConversationID",
+              "displayName": "OriginalConversationID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        2672,
+        336
+      ],
+      "id": "48bcfdc8-d219-4d86-8f2a-82a231326537",
+      "name": "Update record2",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "IUXT6k6xhXYCn2iu",
+          "name": "Airtable Personal Access Token account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.elevenlabs.io/v1/convai/phone-numbers",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "{\n\"xi-api-key\":\"YOUR_ELEVENLABS_API_KEY\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1616,
+        368
+      ],
+      "id": "26dd886a-93f5-4d8e-8c4e-b8582817e4f0",
+      "name": "HTTP Request4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get all items from the Merge node into a single array\nconst allData = items.map(item => item.json);\n\n// 1. Find the object containing the number to search for (the one with a 'fields' key)\nconst recordObject = allData.find(item => item.fields);\n\n// Check if the record with the 'fields' key was found\nif (!recordObject || !recordObject.fields['FromNumber ']) {\n  // If no record or 'FromNumber ' key is found, stop and return an error\n  return [{ \n    json: { \n      error: \"Could not find the record object with the 'FromNumber ' field.\" \n    } \n  }];\n}\n\n// 2. Get the target phone number from that object\n// IMPORTANT: Your key 'FromNumber ' has a trailing space. This code handles it.\nconst targetPhoneNumber = recordObject.fields['FromNumber '].trim();\n\n// 3. Search the entire dataset again to find the phone configuration that matches\nconst phoneConfig = allData.find(item => item.phone_number === targetPhoneNumber);\n\nlet result = {};\n\n// 4. Prepare the final output\nif (phoneConfig) {\n  // Success! A match was found.\n  result.phone_number_id = phoneConfig.phone_number_id;\n  result.found_match_for = targetPhoneNumber;\n} else {\n  // If no match was found, return an informative error\n  result.error = `Could not find a phone configuration for the number: ${targetPhoneNumber}`;\n}\n\n// Return the result for the next node in your workflow\nreturn [{ \n  json: result \n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2128,
+        112
+      ],
+      "id": "e4e4ffc6-ac37-4ada-bc20-74dae6c9e301",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 3,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2288,
+        -160
+      ],
+      "id": "ea84fb93-6693-4e5e-968a-ab9a61ad2ae7",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "content": "## Trigger the workflow after a set Time "
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        320
+      ],
+      "id": "09ba5544-034b-4a24-9b95-beb99176295b",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "operation": "search",
+        "base": {
+          "__rl": true,
+          "value": "appQ50d0FmPuA4cx3",
+          "mode": "list",
+          "cachedResultName": "testing",
+          "cachedResultUrl": "https://airtable.com/appQ50d0FmPuA4cx3"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblbTfBRPT8gd960H",
+          "mode": "list",
+          "cachedResultName": "Callbacks",
+          "cachedResultUrl": "https://airtable.com/appQ50d0FmPuA4cx3/tblbTfBRPT8gd960H"
+        },
+        "filterByFormula": "=AND(\n  {Status} = 'Scheduled',\n  IS_BEFORE(\n    SET_TIMEZONE({ScheduledTimeUTC}, 'Asia/Singapore'),\n    SET_TIMEZONE(NOW(), 'Asia/Singapore')\n  )\n)",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        224,
+        160
+      ],
+      "id": "d002b265-e27e-4c7a-8ece-d9f9dcd78695",
+      "name": "Search records for Callbacks from the table ",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "IUXT6k6xhXYCn2iu",
+          "name": "Airtable Personal Access Token account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "base": {
+          "__rl": true,
+          "value": "appQ50d0FmPuA4cx3",
+          "mode": "list",
+          "cachedResultName": "testing",
+          "cachedResultUrl": "https://airtable.com/appQ50d0FmPuA4cx3"
+        },
+        "table": {
+          "__rl": true,
+          "value": "tblbTfBRPT8gd960H",
+          "mode": "list",
+          "cachedResultName": "Callbacks",
+          "cachedResultUrl": "https://airtable.com/appQ50d0FmPuA4cx3/tblbTfBRPT8gd960H"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Status": "Processing",
+            "id": "={{ $json.id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": true,
+              "removed": false
+            },
+            {
+              "id": "PhoneNumberToCall",
+              "displayName": "PhoneNumberToCall",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "ScheduledTimeUTC",
+              "displayName": "ScheduledTimeUTC",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "dateTime",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "options",
+              "options": [
+                {
+                  "name": "Scheduled",
+                  "value": "Scheduled"
+                },
+                {
+                  "name": "Processing",
+                  "value": "Processing"
+                },
+                {
+                  "name": "Completed",
+                  "value": "Completed"
+                },
+                {
+                  "name": "Error",
+                  "value": "Error"
+                },
+                {
+                  "name": "+919050138050",
+                  "value": "+919050138050"
+                }
+              ],
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "AgentID",
+              "displayName": "AgentID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "OriginalConversationID",
+              "displayName": "OriginalConversationID",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "FromNumber ",
+              "displayName": "FromNumber ",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.airtable",
+      "typeVersion": 2.1,
+      "position": [
+        432,
+        144
+      ],
+      "id": "e3a909d0-950e-4b5e-bc1e-89756aa87d9c",
+      "name": "Change the status in table to processing",
+      "credentials": {
+        "airtableTokenApi": {
+          "id": "IUXT6k6xhXYCn2iu",
+          "name": "Airtable Personal Access Token account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n\"input\":\"Follow up on previous conversation\",\n\"model\":\"text-embedding-3-small\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        896,
+        336
+      ],
+      "id": "2df799b1-b407-4a8e-a8b3-80e29b4d7365",
+      "name": "Get the embeddings for Matching with other data ",
+      "credentials": {
+        "openAiApi": {
+          "id": "QggenxUH8shoGkmB",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://agent-memory-zwfrjjl.svc.aped-4627-b74a.pinecone.io/query",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={\n  \"Api-Key\": \"YOUR_PINECONE_API_KEY\"\n}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"vector\": [{{ $json.data[0].embedding }}],\n  \"topK\": 3,\n  \"includeMetadata\": true,\n  \"filter\": {\n    \"called_number\": { \"$eq\": \"{{$('Change the status in table to processing').item.json.fields.PhoneNumberToCall}}\" }\n  }\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1136,
+        336
+      ],
+      "id": "1ec3cad7-3b3f-4665-932b-3950dd463af1",
+      "name": "Match the embeddings in Pinecone"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the search results from the previous node\nconst matches = $input.item.json.matches;\n\n// If no results are found, return a simple message. This is already JSON-safe.\nif (!matches || matches.length === 0) {\n  return [{ long_term_memory: 'No previous conversations found.' }];\n}\n\n// If results are found, format each one into a JSON-compatible string line\nconst context = matches.map(match => {\n  const summary = match.metadata.summary;\n  const timestamp = match.metadata.timestamp;\n\n  // We need to construct a string that includes escaped double quotes.\n  // For example: \\\"undefined\\\"\n  // In Javascript, we escape the backslash itself, so it becomes \\\\\"\n  const formattedSummary = `\\\\\"${summary}\\\\\"`;\n\n  return `- On ${timestamp}, we discussed: ${formattedSummary}`;\n}).join('\\\\n'); // Join each item with the literal characters '\\n', not an actual newline.\n\n// Prepend the header text, also using the escaped newline '\\\\n'.\nconst finalMemoryString = `Context from previous calls:\\\\n${context}`;\n\n// Return the final formatted text block.\n// The value of long_term_memory is now one continuous string with escaped characters.\nreturn [{ long_term_memory: finalMemoryString }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1344,
+        336
+      ],
+      "id": "3a22a71e-8db5-4e4e-bf48-a179282a9f16",
+      "name": "Filter Out the long context memory"
+    },
+    {
+      "parameters": {
+        "content": "## This is request for \ngetting the phone Numbers from our elevenLabs agent"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1536,
+        544
+      ],
+      "id": "bffe35cc-8721-4e76-9f3f-1c586945b3ba",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1888,
+        208
+      ],
+      "id": "45363e99-c2c3-453d-84ad-03dc5cd1df48",
+      "name": "Append the Phone Numbers with the number to call data"
+    },
+    {
+      "parameters": {
+        "content": "Filter out the phone_number_id from the data ",
+        "height": 80,
+        "width": 192
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2096,
+        240
+      ],
+      "id": "ad65b745-e636-4525-a16f-5439e5943d5c",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## combining data for HTTP request ",
+        "height": 112,
+        "width": 208
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        -288
+      ],
+      "id": "a1649b94-ccf8-41ac-b6b0-f29a7a67211c",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "Send request to the ElevenLabs for Calling ",
+        "height": 80,
+        "width": 192
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2560,
+        -48
+      ],
+      "id": "cf91a868-36ff-430a-8afe-347566a10358",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "Change the status to Completed",
+        "height": 80,
+        "width": 150
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2768,
+        272
+      ],
+      "id": "6b0470db-9f14-4e67-beba-57ecfd4beb96",
+      "name": "Sticky Note5"
+    }
+  ],
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2025-10-16T22:25:40.001+08:00",
+          "Readable date": "October 16th 2025, 10:25:40 pm",
+          "Readable time": "10:25:40 pm",
+          "Day of week": "Thursday",
+          "Year": "2025",
+          "Month": "October",
+          "Day of month": "16",
+          "Hour": "22",
+          "Minute": "25",
+          "Second": "40",
+          "Timezone": "Asia/Singapore (UTC+08:00)"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Search records for Callbacks from the table ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get the embeddings for Matching with other data ",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Append the Phone Numbers with the number to call data",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Update record2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update record2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "main": [
+        [
+          {
+            "node": "Append the Phone Numbers with the number to call data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search records for Callbacks from the table ": {
+      "main": [
+        [
+          {
+            "node": "Change the status in table to processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Change the status in table to processing": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get the embeddings for Matching with other data ": {
+      "main": [
+        [
+          {
+            "node": "Match the embeddings in Pinecone",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match the embeddings in Pinecone": {
+      "main": [
+        [
+          {
+            "node": "Filter Out the long context memory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Out the long context memory": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Append the Phone Numbers with the number to call data": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "36b03f8d-ab91-40bf-b95e-2d8417d69c57",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "297053136ba1749ae2334d577192da678d4da87a18c0afa189e98db187093a0c"
+  },
+  "id": "7jIn3QGk7gVsJo1q",
+  "tags": []
+}
